@@ -16,6 +16,7 @@ MongoClient.connect('mongodb+srv://yoda:yodaisop@cluster0.pdtpo.mongodb.net/OrgT
         app.listen(PORT, ()=>{
             console.log(`Server running on ${PORT}`)
         })
+        app.set('view engine', 'ejs')
         ///Middlewares ------
         app.use(bodyParser.urlencoded({ extended: true }))
             console.log('May Node be with you');
@@ -24,11 +25,11 @@ MongoClient.connect('mongodb+srv://yoda:yodaisop@cluster0.pdtpo.mongodb.net/OrgT
             db.collection('quotes').find().toArray()
             
             .then(results => {
-                console.log(results)
+                response.render('index.ejs', { quotes: results })
             })
             .catch(error => console.error(error))
            
-            response.sendFile(__dirname + '/index.html')
+            // response.sendFile(__dirname + '/index.html')
         });
         app.post('/quotes', (request, response) => {
             quotesCollection.insertOne(request.body)
