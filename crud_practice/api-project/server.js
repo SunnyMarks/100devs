@@ -4,8 +4,10 @@ const bodyParser = require('body-parser');
 const MongoClient = require('mongodb').MongoClient;
 const app = express();
 const PORT = 3000;
+let db,
+dbConnectionStr = process.env.DB_STRING
 
-MongoClient.connect('mongodb+srv://yoda:yodaisop@cluster0.pdtpo.mongodb.net/OrgTest001?retryWrites=true&w=majority', { 
+MongoClient.connect(dbConnectionStr, { 
     useUnifiedTopology: true 
 }) 
     .then(client => {
