@@ -1,47 +1,75 @@
-const { request, response } = require('express');
 const express = require('express');
-const bodyParser = require('body-parser');
 const MongoClient = require('mongodb').MongoClient;
 const app = express();
 const PORT = 3000;
-let db,
-dbConnectionStr = process.env.DB_STRING
+
+//fix dotenv to work with MongoClient.connect(dbConnectionStr, ...)
+require('dotenv').config()
+
+const dbConnectionStr = process.env.DB_STRING
+
+
 
 MongoClient.connect(dbConnectionStr, { 
     useUnifiedTopology: true 
 }) 
-    .then(client => {
+
+.then(client => {
         console.log('Connected to Database')
         const db = client.db('OrgTest001')
         const quotesCollection = db.collection('quotes')
-        //Handlers-------
-        app.listen(PORT, ()=>{
-            console.log(`Server running on ${PORT}`)
-        })
+        
         app.set('view engine', 'ejs')
         ///Middlewares ------
-        app.use(bodyParser.urlencoded({ extended: true }))
+        app.use(express.urlencoded({ extended: true }))
             console.log('May Node be with you');
+        
+        app.use(express.json())
+        app.use(express.static('public'))
         //Routes -----
-        app.get('/', (request, response) => {
+        app.get('/', (req, res) => {
             db.collection('quotes').find().toArray()
             
             .then(results => {
-                response.render('index.ejs', { quotes: results })
+                res.render('index.ejs', { quotes: results })
             })
             .catch(error => console.error(error))
            
-            // response.sendFile(__dirname + '/index.html')
+            // res.sendFile(__dirname + '/index.html')
         });
-        app.post('/quotes', (request, response) => {
-            quotesCollection.insertOne(request.body)
+        app.post('/quotes', (req, res) => {
+            quotesCollection.insertOne(req.body)
                 .then(result => {
-                    response.redirect('/')
+                    res.redirect('/')
                 })
                 .catch(error => console.error(error))
-            //console.log(request.body)
+            //console.log(req.body)
         })
-        
+
+        app.put('/quotes', (req, res) => {
+           quotesCollection.findOneAndUpdate(
+               { name: 'Yoda' },
+               { 
+                   $set: {
+                       name: req.body.name,
+                       quote: req.body.quote
+                   }
+                },
+               { 
+                   upsert: true
+                }
+           )
+           .then(result => { 
+               console.log(result)
+            })
+           .catch(error => console.error(error))
+            console.log(req.body)
+        })
+
+        //Listeners-------
+        app.listen(PORT, () => {
+            console.log(`Server running on ${PORT}`)
+        })
     })
 
     .catch(error => console.error(error))
